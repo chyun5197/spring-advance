@@ -22,7 +22,7 @@ public class Article {
     private String content;
     private Long boardId; // shard key
     private Long writerId;
-    private LocalDateTime createAt;
+    private LocalDateTime createdAt;
     private LocalDateTime modifiedAt;
 
     public static Article create(Long articleId, String title, String content, Long boardId, Long writerId) {
@@ -32,7 +32,7 @@ public class Article {
         article.content = content;
         article.boardId = boardId;
         article.writerId = writerId;
-        article.createAt = LocalDateTime.now();
+        article.createdAt = LocalDateTime.now();
         article.modifiedAt = LocalDateTime.now();
         return article;
     }

@@ -1,22 +1,27 @@
 package hyun.board.article.api;
 
 import hyun.board.article.service.request.ArticleCreateRequest;
+import hyun.board.article.service.response.ArticlePageResponse;
 import hyun.board.article.service.response.ArticleResponse;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.ToString;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.shadow.com.univocity.parsers.common.processor.core.AbstractBeanProcessor;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.web.client.RestClient;
+
+import java.util.List;
 
 public class ArticleApiTest {
     RestClient restClient = RestClient.create("http://localhost:9000");
 
     @Test
     void createTest(){
-        ArticleResponse articleResponse = create(new ArticleCreateRequest(
+        ArticleResponse response = create(new ArticleCreateRequest(
                 "hi", "my content", 1L, 1L
         ));
-        System.out.println("articleResponse = " + articleResponse);
+//        System.out.println("articleResponse = " + response);
     }
 
     ArticleResponse create(ArticleCreateRequest request){
@@ -27,16 +32,75 @@ public class ArticleApiTest {
                 .body(ArticleResponse.class);
     }
 
-//    @Test
-//    void readTest(){
-//        read()
-//    }
+//    144773935777579008
+    @Test
+    void readTest(){
+        ArticleResponse read = read(144773935777579008L);
+        System.out.println("read = " + read);
+    }
 
-    ArticleResponse read(ArticleCreateRequest request){
+    ArticleResponse read(Long articleId){
         return restClient.get()
-                .uri("/v1/articles")
+                .uri("/v1/articles/{articleId}", articleId)
                 .retrieve()
                 .body(ArticleResponse.class);
+    }
+
+    @Test
+    void updateTest(){
+        update(144773935777579008L);
+        ArticleResponse response = read(144773935777579008L);
+        System.out.println("response = " + response);
+    }
+
+    void update(Long articleId){
+        restClient.put()
+                .uri("/v1/articles/{articleId}", articleId)
+                .body(new ArticleUpdateRequest("hi 2", "my content2"))
+                .retrieve();
+    }
+
+    @Test
+    void deleteTest(){
+        restClient.delete()
+                .uri("/v1/articles/{articleId}", 144773935777579008L)
+                .retrieve();
+    }
+
+    @Test
+    void readAllTest(){
+        ArticlePageResponse response = restClient.get()
+                .uri("/v1/articles?boardId=1&pageSize=30&page=1")
+                .retrieve()
+                .body(ArticlePageResponse.class);
+        System.out.println("response.getArticleCount() = " + response.getArticleCount());
+        for(ArticleResponse article : response.getArticles()){
+            System.out.println("articleId = " + article.getArticleId());
+        }
+
+    }
+
+    @Test
+    void readAllInfiniteScrollTest(){
+        List<ArticleResponse> articles1 = restClient.get()
+                .uri("/v1/articles/infinite-scroll?boardId=1&pageSize=5")
+                .retrieve()
+                .body(new ParameterizedTypeReference<List<ArticleResponse>>() {
+                });
+        System.out.println("firstPage");
+        for(ArticleResponse articleResponse : articles1){
+            System.out.println("articleId = " + articleResponse.getArticleId());
+        }
+
+        Long lastArticleId = articles1.getLast().getArticleId();
+        List<ArticleResponse> articles2 = restClient.get()
+                .uri("/v1/articles/infinite-scroll?boardId=1&pageSize=5&lastArticleId=%s".formatted(lastArticleId))
+                .retrieve()
+                .body(new ParameterizedTypeReference<List<ArticleResponse>>(){});
+        System.out.println("secondPage");
+        for(ArticleResponse articleResponse : articles2){
+            System.out.println("articleId = " + articleResponse.getArticleId());
+        }
     }
 
 
@@ -50,6 +114,7 @@ public class ArticleApiTest {
     }
 
     @Getter
+    @AllArgsConstructor
     static class ArticleUpdateRequest {
         private String title;
         private String content;

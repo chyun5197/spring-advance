@@ -24,7 +24,7 @@ public class ArticleResponse {
         response.content = article.getContent();
         response.boardId = article.getBoardId();
         response.writerId = article.getWriterId();
-        response.createAt = article.getCreateAt();
+        response.createAt = article.getCreatedAt();
         response.modifiedAt = article.getModifiedAt();
         return response;
     }
